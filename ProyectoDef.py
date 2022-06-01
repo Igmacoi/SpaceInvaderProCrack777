@@ -21,7 +21,7 @@ screen = pygame.display.set_mode((ScreenX, ScreenY)) #crea la ventana
 fondo = pygame.image.load("cosas/Fondo.png").convert()
 
 #Titulo de la ventana
-pygame.display.set_caption("Space Invader Pro crack 777")
+pygame.display.set_caption("Space Invader Pro crack 2.0")
 
 clock = pygame.time.Clock()
 
