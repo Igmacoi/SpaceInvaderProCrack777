@@ -1,5 +1,12 @@
 import pygame
 import random
+#---------------------------------------------------------------------
+# Juego Space Invader
+# Para mover al jugador se utilizan las flechas de izqueirda <- y
+# derecha ->, para disparar utilizamos la tecla Spacio
+# El juego consiste en destruir a los aliens(enemigos) y generar el 
+# mayor puntaje posible antes de que nuestra vida llege a 0
+#---------------------------------------------------------------------
 
 ScreenX,ScreenY = 500,700  #ventana
 
@@ -31,6 +38,8 @@ y = 0
 
 
 class Player(pygame.sprite.Sprite):
+    #entrada self -Es una instancia para llamar al objeto
+    #salida  
     def __init__(self):
         super().__init__()
         self.image = pygame.image.load("cosas/navecita.png").convert() #llamamos a la imagen
@@ -40,6 +49,8 @@ class Player(pygame.sprite.Sprite):
         self.rect.bottom = ScreenY  #pocicion Y en donde aparece la nave
         self.speed_x = 0 #velocidad en X, mas abajo se define la velocidad
 
+    #entrada self -Es una instancia para llamar al objeto
+    #salida 
     def update(self):
         self.speed_x = 0
         # update para actualizar y saber que tecla se preciono
@@ -56,7 +67,8 @@ class Player(pygame.sprite.Sprite):
         if self.rect.left < 0:
             self.rect.left = 0
 
-
+    #entrada self -Es una instancia para llamar al objeto
+    #salida 
     def disparo(self):
         #pocicion de la bala (de donde sale)
         #llamamos a la clase Balas
@@ -67,32 +79,46 @@ class Player(pygame.sprite.Sprite):
         Sdisp.play() #sonido al disparar
 
 class Balas(pygame.sprite.Sprite):
+    #entrada self -Es una instancia para llamar al objeto
+    #         X eje x en pantalla
+    #         Y eje y en pantalla
+    #salida 
     def __init__(self,x,y):
         super().__init__()
-        self.image = pygame.image.load('cosas/Balita.png').convert()
-        self.image.set_colorkey(CoInvi)
+        self.image = pygame.image.load('cosas/Balita.png').convert()#llamamos a la imagen
+        self.image.set_colorkey(CoInvi)#ponemos el color trasparente
         self.rect = self.image.get_rect()
-        self.rect.y = y 
-        self.rect.centerx = x
-        self.speedy = -10
+        self.rect.y = y #pocicion de donde sale la bala en eje y
+        self.rect.centerx = x #pocicion de donde sale la bala en eje x
+        self.speedy = -10 #velocidad de la bala de la nave
 
     #hacia donde se dirige la bala
+    #entrada self -Es una instancia para llamar al objeto
+    #salida 
     def update(self):
         self.rect.y += self.speedy
-        # cuando llege a 0 en el eje Y, se borra
+        # cuando llege a 0 en el eje Y, se borra la bala
         if self.rect.bottom < 0:
             self.kill() #kill - desaparece la bala
 
 class Enemigos(pygame.sprite.Sprite):
+    #entrada self -Es una instancia para llamar al objeto
+    #         X eje x en pantalla
+    #         Y eje y en pantalla
+    #salida 
     def __init__(self, x, y):
         super().__init__()
-        self.image = pygame.image.load('cosas/Enemi1.png').convert()
-        self.image.set_colorkey(CoInvi)
+        self.image = pygame.image.load('cosas/Enemi1.png').convert()#llamamos a la imagen
+        self.image.set_colorkey(CoInvi)#ponemos el color trasparente
         self.rect = self.image.get_rect()
-        self.rect.x =  random.randrange(1, ScreenX - 50)
-        self.rect.y = random.randrange(1, 400)
-        self.speedy = -50
+        self.rect.x =  random.randrange(1, ScreenX - 50)#pocicion de donde sale la bala en eje
+                                                #x de forma aleatoria entre los parametros dados
+        self.rect.y = random.randrange(1, 400)#pocicion de donde sale la bala en eje
+                                         #y de forma aleatoria entre los parametros dados
+        self.speedy = -50 #velocidad de los enemigos en el eje Y, -50 es para donde se mueven (izquierda)
 
+    #entrada self -Es una instancia para llamar al objeto
+    #salida 
     def update(self):
         self.time = 1 #velocidad
         self.rect.x += self.time
@@ -102,25 +128,38 @@ class Enemigos(pygame.sprite.Sprite):
             self.rect.x = 0
             self.rect.y += 50
 
+    #entrada self -Es una instancia para llamar al objeto
+    #salida 
     def disparo(self):
+        #pocicion de la bala (de donde sale)
+        #llamamos a la clase BalasEnemigos
         balaE = BalasEnemigos(self.rect.centerx, self.rect.top)
         Tsprites.add(balaE)
-        balas.add(balaE)
+        balas_enemigos.add(balaE)
 
 class BalasEnemigos(pygame.sprite.Sprite):
+    #entrada self -Es una instancia para llamar al objeto
+    #         X eje x en pantalla
+    #         Y eje y en pantalla
+    #salida 
     def __init__(self,x,y):
         super().__init__()
-        self.image = pygame.image.load('cosas/Balita.png').convert()
-        self.image.set_colorkey(CoInvi)
-        self.image = pygame.transform.rotate(self.image, 180)
+        self.image = pygame.image.load('cosas/Balita.png').convert()#llamamos a la imagen
+        self.image.set_colorkey(CoInvi)#ponemos el color trasparente
+        self.image = pygame.transform.rotate(self.image, 180)#rotamos la imagen en 180 grados
         self.rect = self.image.get_rect()
-        self.rect.y = random.randrange(10, ScreenX)
-        self.rect.centerx = x
-        self.speedy = 10
+        self.rect.y = random.randrange(10, ScreenX)#pocicion de donde sale la bala en eje
+                                         #y de forma aleatoria entre los parametros dados
+        
+        self.rect.centerx = x #pocicion de donde sale la bala en eje X, en el centro de la imagen
+                            #del enemigo que la disparo
+        self.speedy = 10 #velocidad de la nave en eje Y, pisitivo para que suba
 
+    #entrada self -Es una instancia para llamar al objeto
+    #salida 
     def update(self):
         self.rect.y += self.speedy
-        #cuando llegen al limite (ScreenY)=700
+        #cuando llegen al limite (ScreenY)=700, inferior
         #desaparece
         if self.rect.bottom > 700:
             self.kill()
@@ -130,12 +169,12 @@ class BalasEnemigos(pygame.sprite.Sprite):
 # --  pygame.sprite.Group() -- 
 Tsprites = pygame.sprite.Group()
 
+#llamamos al sprite para despues agg a la clase correspondiente
 balas = pygame.sprite.Group()
 enemigos = pygame.sprite.Group()
 balas_enemigos = pygame.sprite.Group()
 
 player = Player()
-
 Tsprites.add(player)
 
 #rango de aparicion de los enemigos
