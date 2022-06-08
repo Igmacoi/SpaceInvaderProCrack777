@@ -16,6 +16,7 @@ Run = True
 #Se define el color par que sea trasparente 
 BLACK = (0, 0, 0)        
 CoInvi = (255, 174, 201) #Color salmon
+Blanco = (160,0,240)
 
 pygame.init()
 pygame.mixer.init()
@@ -35,6 +36,12 @@ clock = pygame.time.Clock()
 #Sonido al disparar
 Sdisp = pygame.mixer.Sound('cosas/laser.wav') 
 y = 0
+
+#ponemos las imagenes en una lista
+explot = []
+for i in range(1,9):
+    Explo = pygame.image.load(f'Explociones/{i}.png')
+    explot.append(Explo)
 
 
 class Player(pygame.sprite.Sprite):
@@ -164,6 +171,33 @@ class BalasEnemigos(pygame.sprite.Sprite):
         if self.rect.bottom > 700:
             self.kill()
 
+class Explo(pygame.sprite.Sprite):
+    def __init__(self, poci):
+        super().__init__()
+        self.image = explot[0]
+        self.image.set_colorkey(CoInvi)
+        img_scala = pygame.transform.scale(self.image, (20,20))	
+        self.rect = img_scala.get_rect()
+        self.rect.center = poci
+        self.time = pygame.time.get_ticks()
+        self.velocidad_explo = 30
+        self.frames = 0 
+
+    def update(self):
+        tiempo = pygame.time.get_ticks()
+        if tiempo - self.time > self.velocidad_explo:
+            self.time = tiempo 
+            self.frames+=1
+            if self.frames == len(explot):
+                self.kill()
+            else:
+                position = self.rect.center
+                self.image = explot[self.frames]
+                self.rect = self.image.get_rect()
+                self.rect.center = position
+
+
+
 
 #Tsprites, es para guardar todos los sprites a los que se les asigna
 # --  pygame.sprite.Group() -- 
@@ -208,6 +242,10 @@ while Run:
 
     #Colicion de los enemigos
     colicionE = pygame.sprite.groupcollide(enemigos, balas,True,True)
+    for i in colicionE:
+        bum = Explo(i.rect.center) 
+        Tsprites.add(bum)
+
 
     clock.tick(60)
     pygame.display.flip()
