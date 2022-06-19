@@ -1,3 +1,4 @@
+from platform import platform
 import pygame
 import random
 #---------------------------------------------------------------------
@@ -22,11 +23,12 @@ pygame.init()
 pygame.mixer.init()
 
 
-
-screen = pygame.display.set_mode((ScreenX, ScreenY)) #crea la ventana
+#crea la ventana
+screen = pygame.display.set_mode((ScreenX, ScreenY)) 
 
 #Se crea una variable para luego llamarla en el while principal 
 fondo = pygame.image.load("cosas/Fondo.png").convert()
+y = 0 
 
 #Titulo de la ventana
 pygame.display.set_caption("Space Invader Pro crack 2.0")
@@ -34,8 +36,9 @@ pygame.display.set_caption("Space Invader Pro crack 2.0")
 clock = pygame.time.Clock()
 
 #Sonido al disparar
-Sdisp = pygame.mixer.Sound('cosas/laser.wav') 
-y = 0
+Sdisp = pygame.mixer.Sound('cosas/laser.wav')
+#Sonido Explo enemigos
+SexplE = pygame.mixer.Sound('cosas/explosound.wav') 
 
 #ponemos las imagenes en una lista
 explot = []
@@ -43,6 +46,29 @@ for i in range(1,9):
     Explo = pygame.image.load(f'Explociones/{i}.png')
     explot.append(Explo)
 
+score = 0
+vida = 100
+
+
+def vida(frame, x,y, nivel):
+    largo = 100
+    alto = 20 
+    fill = int((nivel/100)*largo)
+    border = pygame.Rect(x,y, largo, alto)
+    fill = pygame.Rect(x,y,fill, alto)
+    pygame.draw.rect(frame, (255,0,55),fill)
+    pygame.draw.rect(frame, negro, border,4)
+
+
+window = pygame.display.set_mode((ScreenX, ScreenY))
+blanco = (255,255,255)
+negro = (0,0,0)
+def puntuacion(frame, text, size, x,y):
+	font = pygame.font.SysFont('Small Fonts', size, bold=True)
+	text_frame = font.render(text, True, blanco,negro)
+	text_rect = text_frame.get_rect()
+	text_rect.midtop = (x,y)
+	frame.blit(text_frame, text_rect)
 
 class Player(pygame.sprite.Sprite):
     #entrada self -Es una instancia para llamar al objeto
@@ -55,6 +81,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.centerx = ScreenX // 2 #pocicion X en donde aparece la nave
         self.rect.bottom = ScreenY  #pocicion Y en donde aparece la nave
         self.speed_x = 0 #velocidad en X, mas abajo se define la velocidad
+        self.vida = 100 
 
     #entrada self -Es una instancia para llamar al objeto
     #salida 
@@ -63,9 +90,9 @@ class Player(pygame.sprite.Sprite):
         # update para actualizar y saber que tecla se preciono
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
-           self.speed_x = -3
+           self.speed_x = -6
         if keys[pygame.K_RIGHT]:
-            self.speed_x = 3
+            self.speed_x = 6
         
         #limites de la nave
         self.rect.x += self.speed_x
@@ -77,7 +104,7 @@ class Player(pygame.sprite.Sprite):
     #entrada self -Es una instancia para llamar al objeto
     #salida 
     def disparo(self):
-        #pocicion de la bala (de donde sale)
+        #posicion de la bala (de donde sale)
         #llamamos a la clase Balas
         bala = Balas(self.rect.centerx, self.rect.top)
         #agg bala a los sprites
@@ -137,23 +164,24 @@ class Enemigos(pygame.sprite.Sprite):
 
     #entrada self -Es una instancia para llamar al objeto
     #salida 
-    def disparo(self):
+    def disparo_enemigo(self):
         #pocicion de la bala (de donde sale)
         #llamamos a la clase BalasEnemigos
         balaE = BalasEnemigos(self.rect.centerx, self.rect.top)
-        Tsprites.add(balaE)
-        balas_enemigos.add(balaE)
+        #agg bala a los sprites
+        Tsprites.add(balaE)  
+        balas.add(balaE)
 
 class BalasEnemigos(pygame.sprite.Sprite):
     #entrada self -Es una instancia para llamar al objeto
-    #         X eje x en pantalla
-    #         Y eje y en pantalla
+    #         X -eje x en pantalla
+    #         Y -eje y en pantalla
     #salida 
-    def __init__(self,x,y):
+    def __init__(self, x, y):
         super().__init__()
-        self.image = pygame.image.load('cosas/Balita.png').convert()#llamamos a la imagen
-        self.image.set_colorkey(CoInvi)#ponemos el color trasparente
+        self.image = pygame.image.load('cosas/BalitaEnemigo.png').convert_alpha()#llamamos a la imagen
         self.image = pygame.transform.rotate(self.image, 180)#rotamos la imagen en 180 grados
+        self.image.set_colorkey(CoInvi)#ponemos el color trasparente
         self.rect = self.image.get_rect()
         self.rect.y = random.randrange(10, ScreenX)#pocicion de donde sale la bala en eje
                                          #y de forma aleatoria entre los parametros dados
@@ -172,32 +200,36 @@ class BalasEnemigos(pygame.sprite.Sprite):
             self.kill()
 
 class Explo(pygame.sprite.Sprite):
+    #entrada self -Es una instancia para llamar al objeto
+    #        poci -Posicion de la explosion 
     def __init__(self, poci):
         super().__init__()
-        self.image = explot[0]
-        self.image.set_colorkey(CoInvi)
-        img_scala = pygame.transform.scale(self.image, (20,20))	
-        self.rect = img_scala.get_rect()
+        self.image = explot[0] #inicia la Explosion posicion 0 
+        self.rect = self.image.get_rect()
         self.rect.center = poci
-        self.time = pygame.time.get_ticks()
-        self.velocidad_explo = 30
-        self.frames = 0 
-
+        self.time = pygame.time.get_ticks() #Tiempo trascurrido
+        self.Vel_Explot = 40 # Velocidad de la explo-Mientras mas alto, mas se demora
+        self.frames = 0 #variable que aumenta para cambiar la imagen
+                        #de la explosion
+    
+    #entrada self -Es una instancia para llamar al objeto
+    #Salida
     def update(self):
-        tiempo = pygame.time.get_ticks()
-        if tiempo - self.time > self.velocidad_explo:
+        tiempo = pygame.time.get_ticks() #Cuanto tiempo a trascurrudi desde la explicion 
+        #si han trascurrido mas de (vel_explot), NO SE COMO EXPLICARR XDDXDXDXDXDXDXDX
+        if tiempo - self.time > self.Vel_Explot:
+            #Aumenta en 1 los frames para ir variando en las imagenes
             self.time = tiempo 
             self.frames+=1
+            #Una vez pase por todas las imagenes de la explision, esta se detiene
             if self.frames == len(explot):
-                self.kill()
+                self.kill()#elimina la ultima imagen de la explosion de la pantalla
+            #De lo contrario, que carge las imagenes. 
             else:
                 position = self.rect.center
                 self.image = explot[self.frames]
                 self.rect = self.image.get_rect()
                 self.rect.center = position
-
-
-
 
 #Tsprites, es para guardar todos los sprites a los que se les asigna
 # --  pygame.sprite.Group() -- 
@@ -212,8 +244,10 @@ player = Player()
 Tsprites.add(player)
 
 #rango de aparicion de los enemigos
-for x in range(40):
-    enemi = Enemigos(10,10)
+ #VER COMO FUNCIONA
+
+for x in range(20):
+    enemi = Enemigos(10,10) 
     enemigos.add(enemi)
     Tsprites.add(enemi)
  
@@ -240,11 +274,35 @@ while Run:
  
     Tsprites.draw(screen)
 
-    #Colicion de los enemigos
+    #Colicion bala Jugador - Enemigo
     colicionE = pygame.sprite.groupcollide(enemigos, balas,True,True)
     for i in colicionE:
+        score+=10
+        #Disparo del enemigo 
+        enemi.disparo_enemigo()
+        #Cada vez que muera 1, aparece otro        
+        enemigoss = Enemigos(300,10) #ver para que es
+        enemigos.add(enemigoss)
+        Tsprites.add(enemigoss)
+
         bum = Explo(i.rect.center) 
         Tsprites.add(bum)
+        SexplE.play() #intentar se sean sonidos random xd 
+                      #Sonidos By MatthiasTheLaw
+
+    #colicion balas enemigos - jugador 
+    colicionJ = pygame.sprite.spritecollide(player, balas_enemigos, True)
+    for a in colicionJ:
+        player.vida -= 10
+        if player.vida <= 0:
+            run = False 
+        explo1 = Explo(a.rect.center)
+        Tsprites.add(explo1)
+    
+    
+
+    puntuacion(window, ('  SCORE: '+ str(score)+'       '), 30, ScreenX-85, 2)
+    vida(window, ScreenX-285, 0, player.vida)
 
 
     clock.tick(60)
