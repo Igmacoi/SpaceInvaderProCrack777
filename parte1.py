@@ -197,7 +197,6 @@ class Enemigos(pygame.sprite.Sprite):
         #agg bala a los sprites
         Tsprites.add(bala)  
         balas_enemigos.add(bala)
-        #poner sonido
 
 class BalasEnemigos(pygame.sprite.Sprite):
     #entrada self -Es una instancia para llamar al objeto
@@ -224,7 +223,6 @@ class BalasEnemigos(pygame.sprite.Sprite):
         #cuando llegen al limite (ScreenY)=700, inferior desaparece
         if self.rect.bottom > 700:
             self.kill()
-
 
 class Explo(pygame.sprite.Sprite):
     #entrada self -Es una instancia para llamar al objeto
